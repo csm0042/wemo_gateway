@@ -67,9 +67,9 @@ class WemoServer(object):
         info_handler = logging.handlers.TimedRotatingFileHandler(self.info_logfile, when="h", interval=1, backupCount=24, encoding=None, delay=False, utc=False, atTime=None)
         console_handler = logging.StreamHandler()
         # Create individual formats for each handler
-        debug_formatter = logging.Formatter('%(processName)-16s,  %(asctime)-24s,  %(levelname)-8s, %(message)s')
-        info_formatter = logging.Formatter('%(processName)-16s,  %(asctime)-24s,  %(levelname)-8s, %(message)s')    
-        console_formatter = logging.Formatter('%(processName)-16s,  %(asctime)-24s,  %(levelname)-8s, %(message)s')
+        debug_formatter = logging.Formatter('%(asctime)-24s,  %(levelname)-8s, %(message)s')
+        info_formatter = logging.Formatter('%(asctime)-24s,  %(levelname)-8s, %(message)s')    
+        console_formatter = logging.Formatter('%(asctime)-24s,  %(levelname)-8s, %(message)s')
         # Set formatting options for each handler
         debug_handler.setFormatter(debug_formatter)
         info_handler.setFormatter(info_formatter)
