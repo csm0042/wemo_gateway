@@ -6,16 +6,14 @@
 import copy
 import datetime
 import logging
-import logging.handlers
+import file_logger
 import os
 import sys
 import time
+import message
 import multiprocessing
 from multiprocessing.connection import Listener
 import pywemo
-sys.path.insert(0, os.path.abspath('..'))
-import message
-
 
 
 # Authorship Info *********************************************************************************
@@ -198,50 +196,13 @@ class WemoServer(object):
             self.msg = None
             time.sleep(0.010)
 
-# Logging helper functions ************************************************************************
-def setup_log_files():
-    file_drive, file_path = os.path.splitdrive(__file__)
-    log_path = os.path.join(file_drive, "/python_logs")
-    full_path, file_name = os.path.split(__file__)
-    file_name, file_ext = os.path.splitext(file_name)
-    if not os.path.isdir(log_path):
-        os.mkdir(log_path)
-    debug_logfile = (log_path + "/" +  file_name + "_debug.log")
-    info_logfile = (log_path + "/" + file_name + "_info.log")
-    return debug_logfile, info_logfile
 
-
-def setup_log_handlers(debug_logfile, info_logfile):
-    root = logging.getLogger(__name__)
-    root.setLevel(logging.DEBUG)
-    root.handlers = []
-    # Create desired handlers
-    debug_handler = logging.FileHandler(debug_logfile)
-    info_handler = logging.FileHandler(info_logfile)
-    console_handler = logging.StreamHandler(sys.stdout)
-    # Set logging levels for each handler
-    debug_handler.setLevel(logging.DEBUG)
-    info_handler.setLevel(logging.INFO)
-    console_handler.setLevel(logging.INFO)
-    # Create individual formats for each handler
-    debug_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-    info_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')    
-    console_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-    # Set formatting options for each handler
-    debug_handler.setFormatter(debug_formatter)
-    info_handler.setFormatter(info_formatter)
-    console_handler.setFormatter(console_formatter)
-    # Add handlers to root logger
-    root.addHandler(debug_handler)
-    root.addHandler(info_handler)
-    root.addHandler(console_handler)
-    root.debug("logging configured with 3 handlers")
 
 
 if __name__ == "__main__":
     print("\n\nWemo Server Is Running and Listening for Connections...")
-    debug_file, info_file = setup_log_files()
-    setup_log_handlers(debug_file, info_file)
+    debug_file, info_file = file_logger.setup_log_files()
+    file_logger.setup_log_handlers(debug_file, info_file)
     logger = logging.getLogger(__name__)
     wemo_server = WemoServer()
     wemo_server.run()
