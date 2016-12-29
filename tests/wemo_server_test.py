@@ -25,6 +25,7 @@ def setup_log_files():
 
 def setup_log_handlers(debug_logfile, info_logfile):
     root = logging.getLogger()
+    root.setLevel(logging.DEBUG)
     root.handlers = []
     # Create desired handlers
     debug_handler = logging.handlers.TimedRotatingFileHandler(debug_logfile, when="h", interval=1, backupCount=24, encoding=None, delay=False, utc=False, atTime=None)
