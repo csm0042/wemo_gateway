@@ -12,8 +12,9 @@ import sys
 import time
 import message
 import multiprocessing
-from multiprocessing.connection import Listener
+from multiprocessing.connection import Listener, Client
 import pywemo
+import queue
 
 
 # Authorship Info *********************************************************************************
@@ -40,6 +41,8 @@ class WemoServer(object):
         self.state = str()
         self.main_loop = True
         self.logger.debug("Init complete")
+        self.result = None
+        self.msg_to_send = None
 
 
     def setup_listener_connection(self, host, port, password):
@@ -162,7 +165,10 @@ class WemoServer(object):
                 self.set_device_state(msg.name, msg.payload, msg.state)
             # Read device current status
             elif msg.type == "162":
-                self.get_device_state(msg.name, msg.payload)
+                self.result = None
+                self.result = self.get_device_state(msg.name, msg.payload)
+                if self.result is not None:
+                    self.msg_to_send = message.Message(source="6013", dest=msg.source, type="162A", name=msg.name, state=self.result, payload=msg.payload)
             # Kill gateway process
             elif msg.type == "999":
                 self.logger.info("Kill code received - Shutting down")
@@ -181,19 +187,22 @@ class WemoServer(object):
             if self.conn.poll() is True:
                 self.logger.info("Message detected.  Begin receving")
                 self.msg_raw = self.conn.recv()
-                print(self.msg_raw)
                 self.msg = message.Message(raw=self.msg_raw)
             self.conn.close()
             if self.msg is not None:
-                self.logger.info("Processing message")
-                self.logger.info("Source: %s", self.msg.source)
-                self.logger.info("Dest: %s", self.msg.dest)
-                self.logger.info("Type: %s", self.msg.type)
-                self.logger.info("Name: %s", self.msg.name)
-                self.logger.info("State: %s", self.msg.state)
-                self.logger.info("Payload: %s", self.msg.payload)
+                self.logger.info("Processing message: %s", self.msg.raw)
                 self.process_message(self.msg)
+            if self.msg_to_send is not None:
+                try:
+                    self.conn = Client(("localhost", int(self.msg_to_send.dest)), authkey=b"password")
+                    self.conn.send(self.msg_to_send)
+                    self.conn.close()
+                    self.logger.info("Message ACK [%s] successfully sent", self.msg_to_send.raw)
+                except:
+                    self.logger.info("Unable to send message ACK [%s]", self.msg_to_send.raw)
+                    pass
             self.msg = None
+            self.msg_to_send = None
             time.sleep(0.010)
 
 
@@ -201,8 +210,8 @@ class WemoServer(object):
 
 if __name__ == "__main__":
     print("\n\nWemo Server Is Running and Listening for Connections...")
-    debug_file, info_file = file_logger.setup_log_files()
-    file_logger.setup_log_handlers(debug_file, info_file)
-    logger = logging.getLogger(__name__)
-    wemo_server = WemoServer()
+    debug_file, info_file = file_logger.setup_log_files(__file__)
+    logger = file_logger.setup_log_handlers(__file__, debug_file, info_file)
+    #logger = logging.getLogger(__name__)
+    wemo_server = WemoServer(logger=logger)
     wemo_server.run()
