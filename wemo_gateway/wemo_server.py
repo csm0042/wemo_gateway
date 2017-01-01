@@ -168,7 +168,7 @@ class WemoServer(object):
                 self.result = None
                 self.result = self.get_device_state(msg.name, msg.payload)
                 if self.result is not None:
-                    self.msg_to_send = message.Message(source="6013", dest=msg.source, type="162A", name=msg.name, state=self.result, payload=msg.payload)
+                    self.msg_to_send = message.Message(source="6013", dest=str(int(msg.source)+1), type="162A", name=msg.name, state=self.result, payload=msg.payload)
             # Kill gateway process
             elif msg.type == "999":
                 self.logger.info("Kill code received - Shutting down")
@@ -195,7 +195,9 @@ class WemoServer(object):
             if self.msg_to_send is not None:
                 try:
                     self.conn = Client(("localhost", int(self.msg_to_send.dest)), authkey=b"password")
-                    self.conn.send(self.msg_to_send)
+                    self.logger.info("Ack connection established.  Sending ACK message")
+                    self.conn.send(self.msg_to_send.raw)
+                    self.logger.info("ACK message sent.  Closing connection")
                     self.conn.close()
                     self.logger.info("Message ACK [%s] successfully sent", self.msg_to_send.raw)
                 except:

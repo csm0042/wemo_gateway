@@ -4,7 +4,7 @@
 
 # Import Required Libraries (Standard, Third Party, Local) ****************************************
 import logging
-import file_logging
+import file_logger
 import unittest
 import os
 import sys
