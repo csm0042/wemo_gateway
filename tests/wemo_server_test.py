@@ -15,7 +15,7 @@ from wemo_gateway.wemo_server import WemoServer
 # Define test class *******************************************************************************
 class TestWemoServer(unittest.TestCase):
     def setUp(self):
-        file_logging.setup_logging()
+        file_logger.setup_logging(__file__)
         self.logger = logging.getLogger(__name__)
         self.wemo_server = WemoServer()
 
@@ -32,45 +32,45 @@ class TestWemoServer(unittest.TestCase):
 
 
     def test_set_device_state(self):
-        self.wemo_server.set_device_state("lrlt1", "192.168.86.25", 1)
-        self.wemo_server.set_device_state("drlt1", "192.168.86.26", 1)
-        self.wemo_server.set_device_state("br3lt1", "192.168.86.31", 1)
-        self.wemo_server.set_device_state("lrlt1", "192.168.86.25", 0)
-        self.wemo_server.set_device_state("drlt1", "192.168.86.26", 0)
-        self.wemo_server.set_device_state("br3lt1", "192.168.86.31", 0)
+        self.wemo_server.set_device_state("lrlt1", "192.168.86.25", "1")
+        self.wemo_server.set_device_state("drlt1", "192.168.86.26", "1")
+        self.wemo_server.set_device_state("br3lt1", "192.168.86.31", "1")
+        self.wemo_server.set_device_state("lrlt1", "192.168.86.25", "0")
+        self.wemo_server.set_device_state("drlt1", "192.168.86.26", "0")
+        self.wemo_server.set_device_state("br3lt1", "192.168.86.31", "0")
 
 
     def test_get_device_state(self):
         self.device1_state = self.wemo_server.get_device_state("lrlt1", "192.168.86.25")
         self.device2_state = self.wemo_server.get_device_state("drlt1", "192.168.86.26")
         self.device3_state = self.wemo_server.get_device_state("br3lt1", "192.168.86.31")
-        self.assertEqual(self.device1_state, 0)
-        self.assertEqual(self.device2_state, 0)
-        self.assertEqual(self.device3_state, 0)
-        self.wemo_server.set_device_state("lrlt1", "192.168.86.25", 1)
+        self.assertEqual(self.device1_state, "0")
+        self.assertEqual(self.device2_state, "0")
+        self.assertEqual(self.device3_state, "0")
+        self.wemo_server.set_device_state("lrlt1", "192.168.86.25", "1")
         self.device1_state = self.wemo_server.get_device_state("lrlt1", "192.168.86.25")
         self.device2_state = self.wemo_server.get_device_state("drlt1", "192.168.86.26")
         self.device3_state = self.wemo_server.get_device_state("br3lt1", "192.168.86.31")
-        self.assertEqual(self.device1_state, 1)
-        self.assertEqual(self.device2_state, 0)
-        self.assertEqual(self.device3_state, 0)
-        self.wemo_server.set_device_state("drlt1", "192.168.86.26", 1)
+        self.assertEqual(self.device1_state, "1")
+        self.assertEqual(self.device2_state, "0")
+        self.assertEqual(self.device3_state, "0")
+        self.wemo_server.set_device_state("drlt1", "192.168.86.26", "1")
         self.device1_state = self.wemo_server.get_device_state("lrlt1", "192.168.86.25")
         self.device2_state = self.wemo_server.get_device_state("drlt1", "192.168.86.26")
         self.device3_state = self.wemo_server.get_device_state("br3lt1", "192.168.86.31")
-        self.assertEqual(self.device1_state, 1)
-        self.assertEqual(self.device2_state, 1)
-        self.assertEqual(self.device3_state, 0)
-        self.wemo_server.set_device_state("br3lt1", "192.168.86.31", 1)
+        self.assertEqual(self.device1_state, "1")
+        self.assertEqual(self.device2_state, "1")
+        self.assertEqual(self.device3_state, "0")
+        self.wemo_server.set_device_state("br3lt1", "192.168.86.31", "1")
         self.device1_state = self.wemo_server.get_device_state("lrlt1", "192.168.86.25")
         self.device2_state = self.wemo_server.get_device_state("drlt1", "192.168.86.26")
         self.device3_state = self.wemo_server.get_device_state("br3lt1", "192.168.86.31")
-        self.assertEqual(self.device1_state, 1)
-        self.assertEqual(self.device2_state, 1)
-        self.assertEqual(self.device3_state, 1)
-        self.wemo_server.set_device_state("lrlt1", "192.168.86.25", 0)
-        self.wemo_server.set_device_state("drlt1", "192.168.86.26", 0)
-        self.wemo_server.set_device_state("br3lt1", "192.168.86.31", 0)
+        self.assertEqual(self.device1_state, "1")
+        self.assertEqual(self.device2_state, "1")
+        self.assertEqual(self.device3_state, "1")
+        self.wemo_server.set_device_state("lrlt1", "192.168.86.25", "0")
+        self.wemo_server.set_device_state("drlt1", "192.168.86.26", "0")
+        self.wemo_server.set_device_state("br3lt1", "192.168.86.31", "0")
 
 
 

@@ -87,3 +87,10 @@ ENV/
 
 # Rope project settings
 .ropeproject
+/.vscode/launch.json
+/.vscode/settings.json
+/.vscode
+/wemo_gateway.sln
+/wemo_gateway.pyproj
+/.vscode
+/.vs
