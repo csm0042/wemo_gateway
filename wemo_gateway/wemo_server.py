@@ -34,6 +34,8 @@ class WemoServer(object):
     def __init__(self, logger=None):
         # Set up local logging
         self.logger = logger or logging.getLogger(__name__)
+        self.local_port = "6013"
+        self.last_refnum = None
         self.listener = None
         self.conn = None
         self.device = None
@@ -43,6 +45,7 @@ class WemoServer(object):
         self.logger.debug("Init complete")
         self.result = None
         self.msg_to_send = None
+        self.payload = []
 
 
     def setup_listener_connection(self, host, port, password):
@@ -152,28 +155,77 @@ class WemoServer(object):
 
 
     def process_message(self, msg):
-        if msg.dest == "6013":
-            # If message is a heartbeat, update heartbeat and reset
-            if msg.type == "001":
+        # Log each message passed to the processor regardless of steps taken
+        self.logger.debug("Received message [%s]", msg.raw)
+        # Check if message is destined for this service and isn't a repeat
+        if (msg.refnum != self.last_refnum) and (msg.dest == self.local_port):
+            
+            # If message is a heartbeat, update heartbeat datetime and generate msg ack
+            if msg.msgtype == "001":
                 self.heartbeat = datetime.datetime.now()
-                print("Resetting heartbeat")
+                self.logger.debug("Local heartbeat reset")
+                self.msg_to_send = message.Message(refnum=msg.refnum, source=self.local_port, dest=msg.source, msgtype="001A", payload="")
+                # Log ack message and update last ref number register
+                self.logger.debug("Returning ACK message [%s]", self.msg_to_send.raw)
+                self.last_refnum = copy.copy(msg.refnum)
+                self.logger.debug("Updating last refnum register to [%s]", self.last_refnum)
+            
             # Discover device command
-            elif msg.type == "160":
-                self.discover_device(msg.name, msg.payload)
+            if msg.msgtype == "160":
+                self.payload = msg.payload.split(sep=",", maxsplit=2)
+                if len(self.payload) >= 2:
+                    self.logger.debug("Attempting to discover device [%s] at address [%s]", self.payload[0], self.payload[1])
+                    self.discover_device(self.payload[0], self.payload[1])
+                    self.msg_to_send = message.Message(refnum=msg.refnum, source=self.local_port, dest=msg.source, msgtype="162A", payload="")
+                else:
+                    self.logger.warning("Incorrect message payload received for type 160")
+                    self.msg_to_send = message.Message(refnum=msg.refnum, source=self.local_port, dest=msg.source, msgtype="162A", payload="error")
+                # Log ack message and update last ref number register
+                self.logger.debug("Returning ACK message [%s]", self.msg_to_send.raw)
+                self.last_refnum = copy.copy(msg.refnum)
+                self.logger.debug("Updating last refnum register to [%s]", self.last_refnum)
+            
             # Set device state command
-            elif msg.type == "161":
-                self.set_device_state(msg.name, msg.payload, msg.state)
+            if msg.msgtype == "161":
+                self.payload = msg.payload.split(sep=",", maxsplit=3)
+                if len(self.payload) >= 3:
+                    self.logger.debug("Attempting to set device [%s] at address [%s] to state [%s]", self.payload[0], self.payload[1], self.payload[2])
+                    self.set_device_state(self.payload[0], self.payload[1], self.payload[2])
+                    self.msg_to_send = message.Message(refnum=msg.refnum, source=self.local_port, dest=msg.source, msgtype="161A", payload="")
+                else:
+                    self.logger.warning("Incorrect message payload received for type 161")
+                    self.msg_to_send = message.Message(refnum=msg.refnum, source=self.local_port, dest=msg.source, msgtype="161A", payload="error")
+                # Log ack message and update last ref number register
+                self.logger.debug("Returning ACK message [%s]", self.msg_to_send.raw)
+                self.last_refnum = copy.copy(msg.refnum)
+                self.logger.debug("Updating last refnum register to [%s]", self.last_refnum)
+
             # Read device current status
-            elif msg.type == "162":
-                self.result = None
-                self.result = self.get_device_state(msg.name, msg.payload)
-                if self.result is not None:
-                    self.msg_to_send = message.Message(source="6013", dest=str(int(msg.source)+1), type="162A", name=msg.name, state=self.result, payload=msg.payload)
+            if msg.msgtype == "162":
+                self.payload = msg.payload.split(sep=",", maxsplit=2)
+                if len(self.payload) >= 2:
+                    self.logger.debug("Attempting to read status from device [%s] at address [%s]", self.payload[0], self.payload[1])
+                    self.result = None
+                    self.result = self.get_device_state(self.payload[0], self.payload[1])
+                    if self.result is not None:
+                        self.msg_to_send = message.Message(refnum=msg.refnum, source=self.local_port, dest=msg.source, msgtype="162A", payload=(self.payload[0] + "," + self.payload[1] + "," + self.result))
+                    else:
+                        self.msg_to_send = message.Message(refnum=msg.refnum, source=self.local_port, dest=msg.source, msgtype="162A", payload="error")
+                # Log ack message and update last ref number register
+                self.logger.debug("Returning ACK message [%s]", self.msg_to_send.raw)
+                self.last_refnum = copy.copy(msg.refnum)
+                self.logger.debug("Updating last refnum register to [%s]", self.last_refnum)
+            
             # Kill gateway process
-            elif msg.type == "999":
+            if msg.msgtype == "999":
                 self.logger.info("Kill code received - Shutting down")
                 self.shutdown_time = datetime.datetime.now()
                 self.main_loop = False
+                self.msg_to_send = message.Message(refnum=msg.refnum, source=self.local_port, dest=msg.source, msgtype="999A", payload="")
+                # Log ack message and update last ref number register
+                self.logger.debug("Returning ACK message [%s]", self.msg_to_send.raw)
+                self.last_refnum = copy.copy(msg.refnum)
+                self.logger.debug("Updating last refnum register to [%s]", self.last_refnum)
 
 
     def run(self):
