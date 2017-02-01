@@ -8,8 +8,7 @@ import file_logger
 import unittest
 import os
 import sys
-#sys.path.insert(0, os.path.abspath('..'))
-from wemo_gateway.wemo_server import WemoServer
+import wemo_gateway
 
 
 # Define test class *******************************************************************************
@@ -17,7 +16,7 @@ class TestWemoServer(unittest.TestCase):
     def setUp(self):
         file_logger.setup_logging(__file__)
         self.logger = logging.getLogger(__name__)
-        self.wemo_server = WemoServer()
+        self.wemo_server = wemo_gateway.WemoServer()
 
 
     def test_setup_listener_connection(self):
