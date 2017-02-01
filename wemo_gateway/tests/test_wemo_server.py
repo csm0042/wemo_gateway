@@ -8,7 +8,7 @@ import file_logger
 import unittest
 import os
 import sys
-sys.path.insert(0, os.path.abspath('..'))
+#sys.path.insert(0, os.path.abspath('..'))
 from wemo_gateway.wemo_server import WemoServer
 
 
