@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 """ wemo_server.py: Log server process
-
 """
 
 # Import Required Libraries (Standard, Third Party, Local) ****************************************
